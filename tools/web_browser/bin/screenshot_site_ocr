@@ -1,0 +1,69 @@
+#!/root/python3.11/bin/python3
+"""Take a screenshot and extract text using OCR (for text-only models)."""
+from __future__ import annotations
+
+import base64
+import sys
+from argparse import ArgumentParser
+from io import BytesIO
+from pathlib import Path
+
+lib_path = str(Path(__file__).resolve().parent.parent / "lib")
+sys.path.insert(0, lib_path)
+
+from web_browser_config import ClientConfig
+from web_browser_utils import (
+    _print_response_with_metadata,
+    send_request,
+)
+
+config = ClientConfig()
+
+
+def screenshot_with_ocr():
+    """Capture a screenshot and extract text using OCR."""
+    response = send_request(config.port, "screenshot", "GET")
+    if response is None:
+        return
+    
+    # Check if there was an error (like no page open)
+    if response.get("status") == "error":
+        print(f"ERROR: {response.get('message', 'Unknown error')}")
+        print("Make sure to open a website first using: open_site <url>")
+        return
+    
+    _print_response_with_metadata(response)
+    
+    screenshot_data = response["screenshot"]
+    
+    # Try to import OCR library
+    try:
+        from PIL import Image
+        import pytesseract
+    except ImportError:
+        print("\nERROR: OCR dependencies not installed.")
+        print("To use OCR, install: pip install pillow pytesseract")
+        print("And install tesseract: apt-get install tesseract-ocr")
+        return
+    
+    # Decode base64 screenshot
+    img_bytes = base64.b64decode(screenshot_data)
+    img = Image.open(BytesIO(img_bytes))
+    
+    # Extract text using OCR
+    print("\n--- Extracted Text from Screenshot (OCR) ---")
+    try:
+        text = pytesseract.image_to_string(img)
+        if text.strip():
+            print(text)
+        else:
+            print("(No text detected in screenshot)")
+    except Exception as e:
+        print(f"OCR extraction failed: {e}")
+    print("--- End of OCR Text ---")
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser(description="Take screenshot and extract text using OCR")
+    args = parser.parse_args()
+    screenshot_with_ocr()

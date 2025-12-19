@@ -18,6 +18,11 @@ tools:
     docstring: "Take a screenshot of the current page"
     arguments: []
 
+  screenshot_site_ocr:
+    signature: "screenshot_site_ocr"
+    docstring: "Take a screenshot and extract visible text using OCR (for text-only models)"
+    arguments: []
+
   click_mouse:
     signature: "click_mouse <x> <y> [<button>]"
     docstring: "Click at the specified coordinates (shown as a red crosshair) on the current page"

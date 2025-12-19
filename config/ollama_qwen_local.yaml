@@ -1,0 +1,86 @@
+# Configuration for using local Ollama qwen2.5-coder:14b model with SWE-agent
+# This config is optimized for local models without function calling support
+agent:
+  templates:
+    system_template: |-
+      You are a helpful AI assistant that can interact with a computer to solve coding tasks.
+      You have access to the following tools:
+      
+      1. bash: Execute bash commands to explore, run scripts, install packages
+      2. str_replace_editor: A powerful file editor with these commands:
+         - view <path>: View file contents or directory listing
+         - create <path> --file_text "content": Create a new file
+         - str_replace <path> --old_str "old" --new_str "new": Replace text in file
+         - insert <path> --insert_line N --new_str "text": Insert text after line N
+         - undo_edit <path>: Undo last edit
+      
+      IMPORTANT: Use str_replace_editor to edit files, NOT nano, vim, or sed.
+      
+      Format your response with thinking followed by the action in triple backticks:
+      
+      I need to fix the bug in calculate.py. Let me first view the file.
+      
+      ```bash
+      str_replace_editor view /testbed/calculate.py
+      ```
+      
+      After each command, you'll receive output and can decide the next action.
+    instance_template: |-
+      I've uploaded a python code repository in the directory {{working_dir}}. 
+      
+      <pr_description>
+      {{problem_statement}}
+      </pr_description>
+
+      Can you help me implement the necessary changes to the repository so that the requirements specified in the <pr_description> are met?
+      
+      Your task is to make the minimal changes to files in the {{working_dir}} directory to ensure the <pr_description> is satisfied.
+      
+      Follow these steps to resolve the issue:
+      1. First, explore and read code relevant to the <pr_description> using str_replace_editor view or bash commands
+      2. Create a script to reproduce the error and execute it with `python <filename.py>`, to confirm the error
+      3. Edit the source code using str_replace_editor to resolve the issue (DO NOT use nano, vim, or sed)
+      4. Rerun your reproduce script and confirm that the error is fixed!
+      5. Think about edge cases and make sure your fix handles them as well
+      6. When done, use the submit command
+      
+      Remember: 
+      - Use str_replace_editor for ALL file edits
+      - Format your commands in triple backticks after your thinking
+    next_step_template: |-
+      OBSERVATION:
+      {{observation}}
+    next_step_no_output_template: |-
+      Your command ran successfully and did not produce any output.
+  tools:
+    env_variables:
+      PAGER: cat
+      MANPAGER: cat
+      LESS: -R
+      PIP_PROGRESS_BAR: 'off'
+      TQDM_DISABLE: '1'
+      GIT_PAGER: cat
+    bundles:
+      - path: tools/registry
+      - path: tools/edit_anthropic  # Provides str_replace_editor for file editing
+      - path: tools/submit
+    enable_bash_tool: true
+    # Use thought_action parser since local models typically don't support function calling
+    parse_function:
+      type: thought_action
+  # Remove cache_control history processor as it's specific to Anthropic Claude
+  history_processors: []
+  model:
+    name: ollama/qwen2.5-coder:14b  # Provider/model format required
+    api_base: http://localhost:11434  # Default Ollama endpoint
+    per_instance_cost_limit: 0  # Disable cost tracking for local models
+    total_cost_limit: 0
+    per_instance_call_limit: 100  # Limit by number of calls instead
+    max_input_tokens: 0  # Disable max input tokens check
+    temperature: 0.7  # Adjust as needed for your use case
+env:
+  repo:
+    github_url: https://github.com/SWE-agent/test-repo
+  deployment:
+    image: python:3.11  # Standard Python image (pre-pull on host if needed)
+    python_standalone_dir: ""  # Empty for default behavior

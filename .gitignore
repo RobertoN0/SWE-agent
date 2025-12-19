@@ -208,3 +208,10 @@ website/frontend/build
 agent_conf
 sb-cli-reports/
 trajectories_sft/
+
+
+# My ingores
+.venv/
+.env
+venv_pydriller/
+/security_experiment/logs

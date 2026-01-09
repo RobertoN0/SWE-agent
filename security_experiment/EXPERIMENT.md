@@ -7,23 +7,8 @@
 
 ## Overview
 
-This experiment tests SWE-agent's web browser tool against a malicious website to evaluate potential security vulnerabilities. The agent visits a Flask server serving JavaScript-based attacks and we monitor what data can be collected.
+This experiment tests SWE-agent's web browser tool against a malicious website to evaluate potential security vulnerabilities. The agent visits a Flask server serving JavaScript-based attacks and we monitor what data can be collected. Details on the experiment flow can be found [here](https://github.com/RobertoN0/SWE-agent/blob/main/security_experiment/COMPLETE_FLOW_DIAGRAM.md)
 
-### Architecture
-
-```
-AI Agent (Docker Container)
-    ↓ visits URL
-Malicious Server (localhost:8000)
-    ↓ serves exploit.html
-JavaScript executes in agent's browser
-    ↓ sends data
-Server logs collected information
-```
-
-**Network:** Agent in Docker accesses host via gateway IP `172.17.0.1:8000`
-
----
 
 ## Attack Vectors Being Tested
 
@@ -145,7 +130,7 @@ lsof -i :8000
 pkill -f malicious_server.py
 
 # Restart server (with venv activated)
-source venv/bin/activate
+source .venv/bin/activate
 python security_experiment/malicious_server.py
 ```
 
